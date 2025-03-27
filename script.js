@@ -1,23 +1,27 @@
-// Supabase configuration
-const SUPABASE_URL = "https://ufgtavicqxafflqviucf.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmZ3RhdmljcXhhZmZscXZpdWNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDI4NDY0MzcsImV4cCI6MjA1ODQyMjQzN30.-zCF5IGYW5SOO16YC_5J-2X-tUWe7vTAzn83mmjeoDw";
-
-// Initialize Supabase
-const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
+// Ensure Supabase is loaded before using it
 document.addEventListener("DOMContentLoaded", function () {
+    console.log("DOM fully loaded"); // Debugging
+
+    // Initialize Supabase correctly
+    const supabase = window.supabase.createClient(
+        "https://ufgtavicqxafflqviucf.supabase.co",
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmZ3RhdmljcXhhZmZscXZpdWNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDI4NDY0MzcsImV4cCI6MjA1ODQyMjQzN30.-zCF5IGYW5SOO16YC_5J-2X-tUWe7vTAzn83mmjeoDw"
+    );
+
+    // Get DOM Elements
     const taskInput = document.getElementById("task");
-    const addButton = document.querySelector(".task-input button");
+    const addButton = document.getElementById("addTaskButton");
     const taskList = document.getElementById("taskList");
 
     if (!taskInput || !addButton || !taskList) {
-        console.error("Required elements are missing from the DOM.");
+        console.error("Missing DOM elements");
         return;
     }
 
-    // Fetch tasks from Supabase on page load
+    // Fetch tasks on page load
     fetchTasks();
 
+    // Add event listeners for adding tasks
     addButton.addEventListener("click", addTask);
     taskInput.addEventListener("keypress", function (event) {
         if (event.key === "Enter") {
@@ -25,20 +29,24 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
+    // Fetch tasks from Supabase
     async function fetchTasks() {
-        const { data: tasks, error } = await supabase.from("tasks").select("*").order("date", { ascending: true });
+        console.log("Fetching tasks..."); // Debugging
+        const { data: tasks, error } = await supabase
+            .from("tasks")
+            .select("*")
+            .order("created_at", { ascending: true });
+
         if (error) {
             console.error("Error fetching tasks:", error);
             return;
         }
 
-        console.log("Fetched tasks:", tasks); // Debugging
-        taskList.innerHTML = ""; // Clear the list before rendering
-        tasks.forEach((task) => {
-            renderTask(task);
-        });
+        taskList.innerHTML = ""; // Clear task list
+        tasks.forEach(renderTask);
     }
 
+    // Add a new task to Supabase
     async function addTask() {
         const taskText = taskInput.value.trim();
         if (taskText === "") {
@@ -46,79 +54,69 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
 
-        const currentDate = new Date();
-        const formattedDate = currentDate.toLocaleDateString("en-US", {
-            year: "numeric",
-            month: "short",
-            day: "numeric",
-        });
-
         const newTask = {
-            text: taskText,
-            date: formattedDate,
-            completed: false,
+            text: taskText,       // Ensure "text" matches the column name in Supabase
+            completed: false,     // Ensure "completed" matches the column name
         };
 
-        const { data, error } = await supabase.from("tasks").insert([newTask]);
+        console.log("Adding task...", newTask); // Debugging
+
+        const { data, error } = await supabase.from("tasks").insert([newTask]).select("*");
+
         if (error) {
             console.error("Error adding task:", error);
+            alert(`Failed to add task: ${error.message}`); // Show error to the user
             return;
         }
 
         console.log("Task added:", data); // Debugging
-        renderTask(data[0]);
+        renderTask(data[0]); // Add the new task to the list
         taskInput.value = "";
     }
 
+    // Delete a task from Supabase
     async function deleteTask(taskId, taskElement) {
         const { error } = await supabase.from("tasks").delete().eq("id", taskId);
         if (error) {
             console.error("Error deleting task:", error);
             return;
         }
-
         taskElement.remove();
     }
 
+    // Toggle task completion status in Supabase
     async function toggleTaskCompletion(taskId, completed, taskElement) {
         const { error } = await supabase.from("tasks").update({ completed }).eq("id", taskId);
         if (error) {
             console.error("Error updating task:", error);
             return;
         }
-
         taskElement.classList.toggle("completed", completed);
     }
 
+    // Render a task in the UI
     function renderTask(task) {
         const li = document.createElement("li");
         li.classList.toggle("completed", task.completed);
         li.innerHTML = `
             <div>
-                <input type="checkbox" class="task-checkbox" ${
-                    task.completed ? "checked" : ""
-                }>
+                <input type="checkbox" class="task-checkbox" ${task.completed ? "checked" : ""}>
                 <span>${task.text}</span>
-                <span class="date">(${task.date})</span>
+                <span class="date">(${new Date(task.created_at).toLocaleDateString("en-US")})</span>
             </div>
             <button class="delete-btn">🗑</button>
         `;
 
         taskList.appendChild(li);
 
-        const deleteButton = li.querySelector(".delete-btn");
-        const checkbox = li.querySelector(".task-checkbox");
+        // Delete button event
+        li.querySelector(".delete-btn").addEventListener("click", function () {
+            deleteTask(task.id, li);
+        });
 
-        if (deleteButton) {
-            deleteButton.addEventListener("click", function () {
-                deleteTask(task.id, li);
-            });
-        }
-
-        if (checkbox) {
-            checkbox.addEventListener("change", function () {
-                toggleTaskCompletion(task.id, checkbox.checked, li);
-            });
-        }
+        // Checkbox event for completion toggle
+        li.querySelector(".task-checkbox").addEventListener("change", function () {
+            toggleTaskCompletion(task.id, this.checked, li);
+        });
     }
 });
