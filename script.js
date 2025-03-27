@@ -54,9 +54,13 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
 
+        // Generate current date
+        const currentDate = new Date().toISOString().split("T")[0]; // Format as YYYY-MM-DD
+
         const newTask = {
-            text: taskText,       // Ensure "text" matches the column name in Supabase
-            completed: false,     // Ensure "completed" matches the column name
+            text: taskText,  // Ensure this matches your Supabase column name
+            date: currentDate,  // Include a valid date
+            completed: false
         };
 
         console.log("Adding task...", newTask); // Debugging
