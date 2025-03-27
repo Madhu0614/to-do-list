@@ -4,10 +4,8 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 
 // Initialize Supabase
 const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-console.log("Supabase initialized:", supabase);
 
 document.addEventListener("DOMContentLoaded", function () {
-    console.log("DOM fully loaded and parsed");
     const taskInput = document.getElementById("task");
     const addButton = document.querySelector(".task-input button");
     const taskList = document.getElementById("taskList");
@@ -20,22 +18,14 @@ document.addEventListener("DOMContentLoaded", function () {
     // Fetch tasks from Supabase on page load
     fetchTasks();
 
-    // Add event listeners for adding tasks
-    addButton.addEventListener("click", function () {
-        console.log("Add Task button clicked");
-        addTask();
-    });
-
+    addButton.addEventListener("click", addTask);
     taskInput.addEventListener("keypress", function (event) {
         if (event.key === "Enter") {
-            console.log("Enter key pressed");
             addTask();
         }
     });
 
-    // Fetch tasks from Supabase
     async function fetchTasks() {
-        console.log("Fetching tasks from Supabase...");
         const { data: tasks, error } = await supabase.from("tasks").select("*").order("date", { ascending: true });
         if (error) {
             console.error("Error fetching tasks:", error);
@@ -49,9 +39,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // Add a new task to Supabase
     async function addTask() {
-        console.log("Add task function called");
         const taskText = taskInput.value.trim();
         if (taskText === "") {
             alert("Please enter a task.");
@@ -71,8 +59,6 @@ document.addEventListener("DOMContentLoaded", function () {
             completed: false,
         };
 
-        console.log("Adding task:", newTask); // Debugging
-
         const { data, error } = await supabase.from("tasks").insert([newTask]);
         if (error) {
             console.error("Error adding task:", error);
@@ -81,10 +67,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
         console.log("Task added:", data); // Debugging
         renderTask(data[0]);
-        taskInput.value = ""; // Clear the input field
+        taskInput.value = "";
     }
 
-    // Delete a task from Supabase
     async function deleteTask(taskId, taskElement) {
         const { error } = await supabase.from("tasks").delete().eq("id", taskId);
         if (error) {
@@ -92,10 +77,9 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
 
-        taskElement.remove(); // Remove the task from the DOM
+        taskElement.remove();
     }
 
-    // Toggle task completion in Supabase
     async function toggleTaskCompletion(taskId, completed, taskElement) {
         const { error } = await supabase.from("tasks").update({ completed }).eq("id", taskId);
         if (error) {
@@ -103,10 +87,9 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
 
-        taskElement.classList.toggle("completed", completed); // Update the DOM
+        taskElement.classList.toggle("completed", completed);
     }
 
-    // Render a task in the DOM
     function renderTask(task) {
         const li = document.createElement("li");
         li.classList.toggle("completed", task.completed);
