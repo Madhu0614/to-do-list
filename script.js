@@ -18,6 +18,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // Fetch tasks from Supabase on page load
     fetchTasks();
 
+    // Add event listeners for adding tasks
     addButton.addEventListener("click", addTask);
     taskInput.addEventListener("keypress", function (event) {
         if (event.key === "Enter") {
@@ -25,6 +26,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
+    // Fetch tasks from Supabase
     async function fetchTasks() {
         const { data: tasks, error } = await supabase.from("tasks").select("*").order("date", { ascending: true });
         if (error) {
@@ -39,6 +41,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
+    // Add a new task to Supabase
     async function addTask() {
         const taskText = taskInput.value.trim();
         if (taskText === "") {
@@ -70,6 +73,7 @@ document.addEventListener("DOMContentLoaded", function () {
         taskInput.value = "";
     }
 
+    // Delete a task from Supabase
     async function deleteTask(taskId, taskElement) {
         const { error } = await supabase.from("tasks").delete().eq("id", taskId);
         if (error) {
@@ -77,9 +81,10 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
 
-        taskElement.remove();
+        taskElement.remove(); // Remove the task from the DOM
     }
 
+    // Toggle task completion in Supabase
     async function toggleTaskCompletion(taskId, completed, taskElement) {
         const { error } = await supabase.from("tasks").update({ completed }).eq("id", taskId);
         if (error) {
@@ -87,9 +92,10 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
 
-        taskElement.classList.toggle("completed", completed);
+        taskElement.classList.toggle("completed", completed); // Update the DOM
     }
 
+    // Render a task in the DOM
     function renderTask(task) {
         const li = document.createElement("li");
         li.classList.toggle("completed", task.completed);
