@@ -62,6 +62,8 @@ document.addEventListener("DOMContentLoaded", function () {
             completed: false,
         };
 
+        console.log("Adding task:", newTask); // Debugging
+
         const { data, error } = await supabase.from("tasks").insert([newTask]);
         if (error) {
             console.error("Error adding task:", error);
@@ -70,7 +72,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         console.log("Task added:", data); // Debugging
         renderTask(data[0]);
-        taskInput.value = "";
+        taskInput.value = ""; // Clear the input field
     }
 
     // Delete a task from Supabase
