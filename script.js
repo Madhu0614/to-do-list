@@ -12,6 +12,10 @@ document.addEventListener("DOMContentLoaded", function () {
     const addButton = document.querySelector(".task-input button");
     const taskList = document.getElementById("taskList");
 
+    console.log("Task Input:", taskInput);
+    console.log("Add Button:", addButton);
+    console.log("Task List:", taskList);
+
     if (!taskInput || !addButton || !taskList) {
         console.error("Required elements are missing from the DOM.");
         return;
@@ -21,7 +25,10 @@ document.addEventListener("DOMContentLoaded", function () {
     fetchTasks();
 
     // Add event listeners for adding tasks
-    addButton.addEventListener("click", addTask);
+    addButton.addEventListener("click", function () {
+        console.log("Add Task button clicked");
+        addTask();
+    });
     taskInput.addEventListener("keypress", function (event) {
         if (event.key === "Enter") {
             addTask();
@@ -53,6 +60,7 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
 
+        console.log("Task text:", taskText); // Debugging
         const currentDate = new Date();
         const formattedDate = currentDate.toLocaleDateString("en-US", {
             year: "numeric",
