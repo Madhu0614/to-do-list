@@ -1,3 +1,10 @@
+// Supabase configuration
+const SUPABASE_URL = "https://ufgtavicqxafflqviucf.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmZ3RhdmljcXhhZmZscXZpdWNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDI4NDY0MzcsImV4cCI6MjA1ODQyMjQzN30.-zCF5IGYW5SOO16YC_5J-2X-tUWe7vTAzn83mmjeoDw";
+
+// Initialize Supabase
+const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
 document.addEventListener("DOMContentLoaded", function () {
     const taskInput = document.getElementById("task");
     const addButton = document.querySelector(".task-input button");
@@ -8,7 +15,7 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
     }
 
-    // Load tasks from local storage on page load
+    // Fetch tasks from Supabase on page load
     fetchTasks();
 
     addButton.addEventListener("click", addTask);
@@ -18,18 +25,21 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
-    function fetchTasks() {
-        const tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+    async function fetchTasks() {
+        const { data: tasks, error } = await supabase.from("tasks").select("*").order("date", { ascending: true });
+        if (error) {
+            console.error("Error fetching tasks:", error);
+            return;
+        }
+
+        console.log("Fetched tasks:", tasks); // Debugging
+        taskList.innerHTML = ""; // Clear the list before rendering
         tasks.forEach((task) => {
             renderTask(task);
         });
     }
 
-    function saveTasks(tasks) {
-        localStorage.setItem("tasks", JSON.stringify(tasks));
-    }
-
-    function addTask() {
+    async function addTask() {
         const taskText = taskInput.value.trim();
         if (taskText === "") {
             alert("Please enter a task.");
@@ -44,37 +54,38 @@ document.addEventListener("DOMContentLoaded", function () {
         });
 
         const newTask = {
-            id: Date.now(), // Unique ID for the task
             text: taskText,
             date: formattedDate,
             completed: false,
         };
 
-        const tasks = JSON.parse(localStorage.getItem("tasks")) || [];
-        tasks.push(newTask);
-        saveTasks(tasks);
+        const { data, error } = await supabase.from("tasks").insert([newTask]);
+        if (error) {
+            console.error("Error adding task:", error);
+            return;
+        }
 
-        renderTask(newTask);
+        console.log("Task added:", data); // Debugging
+        renderTask(data[0]);
         taskInput.value = "";
     }
 
-    function deleteTask(taskId, taskElement) {
-        const tasks = JSON.parse(localStorage.getItem("tasks")) || [];
-        const updatedTasks = tasks.filter((task) => task.id !== taskId);
-        saveTasks(updatedTasks);
+    async function deleteTask(taskId, taskElement) {
+        const { error } = await supabase.from("tasks").delete().eq("id", taskId);
+        if (error) {
+            console.error("Error deleting task:", error);
+            return;
+        }
 
         taskElement.remove();
     }
 
-    function toggleTaskCompletion(taskId, completed, taskElement) {
-        const tasks = JSON.parse(localStorage.getItem("tasks")) || [];
-        const updatedTasks = tasks.map((task) => {
-            if (task.id === taskId) {
-                return { ...task, completed };
-            }
-            return task;
-        });
-        saveTasks(updatedTasks);
+    async function toggleTaskCompletion(taskId, completed, taskElement) {
+        const { error } = await supabase.from("tasks").update({ completed }).eq("id", taskId);
+        if (error) {
+            console.error("Error updating task:", error);
+            return;
+        }
 
         taskElement.classList.toggle("completed", completed);
     }
