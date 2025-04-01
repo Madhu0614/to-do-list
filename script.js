@@ -1,19 +1,23 @@
-// Ensure Supabase is loaded before using it
-document.addEventListener("DOMContentLoaded", function () {
-    console.log("DOM fully loaded"); // Debugging
+require('dotenv').config();
 
-    // Initialize Supabase correctly
-    const supabase = window.supabase.createClient(
-        "https://ufgtavicqxafflqviucf.supabase.co",
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmZ3RhdmljcXhhZmZscXZpdWNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDI4NDY0MzcsImV4cCI6MjA1ODQyMjQzN30.-zCF5IGYW5SOO16YC_5J-2X-tUWe7vTAzn83mmjeoDw"
-    );
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
+
+const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+document.addEventListener("DOMContentLoaded", function () {
+    console.log("Supabase initialized:", supabase);
+    console.log("DOM fully loaded"); // Debugging
 
     // Get DOM Elements
     const taskInput = document.getElementById("task");
+    const taskStatus = document.getElementById("taskStatus");
     const addButton = document.getElementById("addTaskButton");
-    const taskList = document.getElementById("taskList");
+    const todoList = document.getElementById("todoList");
+    const inProgressList = document.getElementById("inProgressList");
+    const doneList = document.getElementById("doneList");
 
-    if (!taskInput || !addButton || !taskList) {
+    if (!taskInput || !taskStatus || !addButton || !todoList || !inProgressList || !doneList) {
         console.error("Missing DOM elements");
         return;
     }
@@ -42,13 +46,20 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
 
-        taskList.innerHTML = ""; // Clear task list
+        // Clear all columns
+        todoList.innerHTML = "";
+        inProgressList.innerHTML = "";
+        doneList.innerHTML = "";
+
+        // Render tasks in the appropriate column
         tasks.forEach(renderTask);
     }
 
     // Add a new task to Supabase
     async function addTask() {
         const taskText = taskInput.value.trim();
+        const status = taskStatus.value; // Get the selected status
+
         if (taskText === "") {
             alert("Please enter a task.");
             return;
@@ -59,6 +70,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         const newTask = {
             text: taskText,  // Ensure this matches your Supabase column name
+            status: status,  // Include the selected status
             date: currentDate,  // Include a valid date
             completed: false
         };
@@ -74,7 +86,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         console.log("Task added:", data); // Debugging
-        renderTask(data[0]); // Add the new task to the list
+        renderTask(data[0]); // Add the new task to the appropriate column
         taskInput.value = "";
     }
 
@@ -98,7 +110,7 @@ document.addEventListener("DOMContentLoaded", function () {
         taskElement.classList.toggle("completed", completed);
     }
 
-    // Render a task in the UI
+    // Render a task in the appropriate column
     function renderTask(task) {
         const li = document.createElement("li");
         li.classList.toggle("completed", task.completed);
@@ -106,12 +118,19 @@ document.addEventListener("DOMContentLoaded", function () {
             <div>
                 <input type="checkbox" class="task-checkbox" ${task.completed ? "checked" : ""}>
                 <span>${task.text}</span>
-                <span class="date">(${new Date(task.created_at).toLocaleDateString("en-US")})</span>
+                <span class="date">(${new Date(task.date).toLocaleDateString("en-US")})</span>
             </div>
             <button class="delete-btn">🗑</button>
         `;
 
-        taskList.appendChild(li);
+        // Append the task to the appropriate column based on its status
+        if (task.status === "todo") {
+            todoList.appendChild(li);
+        } else if (task.status === "in-progress") {
+            inProgressList.appendChild(li);
+        } else if (task.status === "done") {
+            doneList.appendChild(li);
+        }
 
         // Delete button event
         li.querySelector(".delete-btn").addEventListener("click", function () {

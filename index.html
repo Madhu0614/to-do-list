@@ -3,18 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>To-Do List</title>
+    <title>Kanban Board</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
-        <h2>My Task List</h2>
-        <p>Keep track of what you need to do</p>
+        <h2>Kanban Board</h2>
+        <p>Organize your tasks into columns</p>
         <div class="task-input">
             <input type="text" id="task" placeholder="Enter a task">
+            <select id="taskStatus">
+                <option value="todo">To Do</option>
+                <option value="in-progress">In Progress</option>
+                <option value="done">Done</option>
+            </select>
             <button id="addTaskButton">Add Task</button>
         </div>
-        <ul id="taskList"></ul>
+        <div class="kanban-board">
+            <div class="kanban-column" id="todo">
+                <h3>To Do</h3>
+                <ul class="task-list" id="todoList"></ul>
+            </div>
+            <div class="kanban-column" id="in-progress">
+                <h3>In Progress</h3>
+                <ul class="task-list" id="inProgressList"></ul>
+            </div>
+            <div class="kanban-column" id="done">
+                <h3>Done</h3>
+                <ul class="task-list" id="doneList"></ul>
+            </div>
+        </div>
     </div>
     
     <!-- Supabase SDK -->
