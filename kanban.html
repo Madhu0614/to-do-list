@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kanban Board</title>
+    <link rel="stylesheet" href="kanban.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="kanban-board">
+        <!-- To Do Column -->
+        <div class="kanban-board">
+            <div class="kanban-column todo">
+                <h2>To Do <span>(0)</span> <button onclick="addTask('todo')">+</button></h2>
+                <div class="kanban-column-content" id="todoTasks"></div>
+            </div>
+            <div class="kanban-column in-progress">
+                <h2>In Progress <span>(0)</span> <button onclick="addTask('inProgress')">+</button></h2>
+                <div class="kanban-column-content" id="inProgressTasks"></div>
+            </div>
+            <div class="kanban-column completed">
+                <h2>Completed <span>(0)</span> <button onclick="addTask('completed')">+</button></h2>
+                <div class="kanban-column-content" id="completedTasks"></div>
+            </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.0.0/dist/umd/supabase.min.js"></script>
+    <script type="module" src="kanban.js"></script>
+</body>
+</html>
