@@ -1,13 +1,23 @@
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.0.0/+esm";
+import { defineConfig } from "vite";
 
-const supabase = createClient(import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_KEY);
+export default defineConfig({
+    server: {
+        open: true, // Automatically open the browser
+    },
+});
 
-if (!supabase) {
-    console.error("Failed to initialize Supabase client.");
-}
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseKey = import.meta.env.VITE_SUPABASE_KEY;
 
 console.log("Supabase URL:", import.meta.env.VITE_SUPABASE_URL);
 console.log("Supabase Key:", import.meta.env.VITE_SUPABASE_KEY);
+
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+if (!supabaseUrl || !supabaseKey) {
+    console.error("Supabase URL or Key is missing. Check your environment variables.");
+}
 
 console.log("Supabase initialized:", supabase);
 
