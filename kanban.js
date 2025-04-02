@@ -1,9 +1,27 @@
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.0.0/+esm";
-const supabaseUrl = "https://ufgtavicqxafflqviucf.supabase.co";
-const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmZ3RhdmljcXhhZmZscXZpdWNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDI4NDY0MzcsImV4cCI6MjA1ODQyMjQzN30.-zCF5IGYW5SOO16YC_5J-2X-tUWe7vTAzn83mmjeoDw";
-const supabase = createClient(supabaseUrl, supabaseKey);
+
+const supabase = createClient(import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_KEY);
+
+if (!supabase) {
+    console.error("Failed to initialize Supabase client.");
+}
+
+console.log("Supabase URL:", import.meta.env.VITE_SUPABASE_URL);
+console.log("Supabase Key:", import.meta.env.VITE_SUPABASE_KEY);
 
 console.log("Supabase initialized:", supabase);
+
+async function testDatabaseConnection() {
+    const { data, error } = await supabase.from("tasks").select("*");
+
+    if (error) {
+        console.error("Error fetching data from Supabase:", error);
+    } else {
+        console.log("Fetched data:", data);
+    }
+}
+
+testDatabaseConnection();
 
 document.addEventListener("DOMContentLoaded", function () {
     fetchTasks();
@@ -19,7 +37,6 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
 
-        // Clear previous tasks
         document.getElementById("todoTasks").innerHTML = '';
         document.getElementById("inProgressTasks").innerHTML = '';
         document.getElementById("completedTasks").innerHTML = '';
@@ -30,10 +47,18 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function renderTask(task) {
         const taskElement = document.createElement("div");
-        taskElement.classList.add("task");
+        taskElement.classList.add(
+            "bg-white", "text-gray-800", "p-3", "rounded-lg", 
+            "shadow-md", "border", "border-gray-300",
+            "hover:shadow-lg", "transition-shadow", "duration-200",
+            "flex", "justify-between", "items-center", "gap-2"
+        );
         taskElement.setAttribute("draggable", true);
         taskElement.dataset.id = task.id;
-        taskElement.innerHTML = `<span>${task.text}</span>`;
+        taskElement.innerHTML = `
+            <span class="flex-1">${task.text}</span>
+            <button class="text-red-500 hover:text-red-700" onclick="deleteTask('${task.id}')">✖</button>
+        `;
 
         let columnId = task.status === "inProgress" ? "inProgressTasks" :
                        task.status === "completed" ? "completedTasks" : "todoTasks";
@@ -46,19 +71,9 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function updateTaskCount(tasks) {
-        const todoCountElement = document.querySelector(".todo h2 span");
-        const inProgressCountElement = document.querySelector(".in-progress h2 span");
-        const completedCountElement = document.querySelector(".completed h2 span");
-
-        if (todoCountElement) {
-            todoCountElement.textContent = `(${tasks.filter(task => task.status === "todo").length})`;
-        }
-        if (inProgressCountElement) {
-            inProgressCountElement.textContent = `(${tasks.filter(task => task.status === "inProgress").length})`;
-        }
-        if (completedCountElement) {
-            completedCountElement.textContent = `(${tasks.filter(task => task.status === "completed").length})`;
-        }
+        document.getElementById("todoCount").textContent = `(${tasks.filter(task => task.status === "todo").length})`;
+        document.getElementById("inProgressCount").textContent = `(${tasks.filter(task => task.status === "inProgress").length})`;
+        document.getElementById("completedCount").textContent = `(${tasks.filter(task => task.status === "completed").length})`;
     }
 
     document.querySelectorAll(".kanban-column-content").forEach((column) => {
@@ -89,29 +104,13 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    async function addTask(status, inputId) {
-        const taskInput = document.getElementById(inputId);
-        const taskText = taskInput.value.trim();
-        if (!taskText) {
-            alert("Please enter a task description.");
-            return;
-        }
+    window.addTask = async function (status) {
+        const taskText = prompt("Enter task description:");
+        if (!taskText) return;
 
-        // Generate the current date in YYYY-MM-DD format
-        const currentDate = new Date().toISOString().split("T")[0];
+        const newTask = { text: taskText, status: status, date: new Date().toISOString().split("T")[0] };
 
-        const newTask = {
-            text: taskText,
-            status: status,
-            date: currentDate, // Include the date field
-        };
-
-        console.log("Adding task:", newTask); // Debugging
-
-        const { data, error } = await supabase
-            .from("tasks")
-            .insert([newTask])
-            .select();
+        const { data, error } = await supabase.from("tasks").insert([newTask]).select();
 
         if (error) {
             console.error("Error adding task:", error);
@@ -119,17 +118,16 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
 
-        console.log("Task added:", data);
-        taskInput.value = ""; // Clear the input field
         fetchTasks();
-    }
+    };
 
-    document.querySelectorAll(".add-task-btn").forEach((button) => {
-        button.addEventListener("click", (event) => {
-            const column = event.target.dataset.column;
-            const inputId = column === "todo" ? "todoInput" :
-                            column === "inProgress" ? "inProgressInput" : "completedInput";
-            addTask(column, inputId);
-        });
-    });
+    window.deleteTask = async function (taskId) {
+        const { error } = await supabase.from("tasks").delete().eq("id", taskId);
+
+        if (error) {
+            console.error("Error deleting task:", error);
+        } else {
+            fetchTasks(); // Refresh the task list after deletion
+        }
+    };
 });
